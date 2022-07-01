@@ -1,0 +1,60 @@
+<html>
+	<head>
+		<title>Popug jira</title>
+		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2" crossorigin="anonymous"></script>
+		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
+		<script>
+			function deleteTask(id) {
+				var xhr = new XMLHttpRequest();
+				xhr.open("DELETE", "/tasks/" + id, false);
+				xhr.send();
+				window.location.replace("/tasks");
+			}
+			function updateTask(id) {
+				var xhr = new XMLHttpRequest();
+				xhr.open("PUT", "/tasks/" + id, false);
+				xhr.send();
+				window.location.replace("/tasks")
+			}
+		</script>
+	</head>
+	<body>
+		<div class="container-sm">
+			<h1>Task tracker</h1>
+			<form action="/tasks" method="POST" enctype="multipart/form-data">
+				<div class="row">
+					<div class="col">
+						<input class="form-control" name="description">
+					</div>
+					<div class="col">
+						<button type="submit" class="btn btn-primary">Add task</button>
+					</div>
+				</div>
+			</form>
+			<h3>Task list:</h3>
+			<table class="table table-hover table-sm align-middle">
+				<thead>
+					<tr>
+					  <th scope="col">#</th>
+					  <th scope="col">Status</th>
+					  <th scope="col">Description</th>
+					  <th scope="col">Actions</th>
+					</tr>
+				</thead>
+				<tbody>
+					{{ range .Tasks }}
+						<tr {{if .Is_ready}} class="table-success" {{end}}>
+								<th scope="row">{{ .Id }}</th>
+								<td> {{if .Is_ready}} Done {{ else }} ToDo {{end}}</td>
+								<td>{{ .Description }}</div>
+								<td>
+									<button type="submit" class="btn btn-outline-success" onclick="updateTask({{ .Id }})">Done</button>
+									<button type="submit" class="btn btn-outline-danger" onclick="deleteTask({{ .Id }})">Delete</button>
+								</td>
+						</tr>	
+					{{ end }}
+				</tbody>
+			</table>
+		</div>
+	</body>
+</html>
