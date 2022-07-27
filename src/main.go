@@ -4,18 +4,20 @@ import (
 	"html/template"
 	"net/http"
 	"path"
-	taskRepository "popug-jira/src/repository"
+	"popug-jira/src/repository"
 	"strconv"
 )
 
 type templateData struct {
-	Tasks []taskRepository.Task
+	Tasks []repository.Task
+	Users []repository.User
 }
 
 func executeTemplate(w http.ResponseWriter) {
 	t, _ := template.ParseFiles("templates/index.html")
 	data := templateData{
-		Tasks: taskRepository.GetTasks(),
+		Tasks: repository.GetTasks(),
+		Users: repository.GetUsersByRole("popug"),
 	}
 	t.Execute(w, data)
 }
@@ -25,20 +27,21 @@ func httpHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		executeTemplate(w)
 	case http.MethodPost:
-		taskRepository.AddTask(r.FormValue("description"))
+		user_id, _ := strconv.Atoi(r.FormValue("user_id"))
+		repository.AddTask(r.FormValue("description"), user_id)
 		http.Redirect(w, r, "/tasks", http.StatusFound)
 	case http.MethodPut:
 		id, _ := strconv.Atoi(path.Base(r.RequestURI))
-		taskRepository.UpdateTask(id)
+		repository.UpdateTask(id)
 	case http.MethodDelete:
 		id, _ := strconv.Atoi(path.Base(r.RequestURI))
-		taskRepository.DeleteTask(id)
+		repository.DeleteTask(id)
 	}
 
 }
 
 func main() {
-	taskRepository.Connect()
+	repository.Connect()
 	server := http.Server{
 		Addr: ":8080",
 	}

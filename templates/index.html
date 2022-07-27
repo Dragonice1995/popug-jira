@@ -22,14 +22,19 @@
 		<div class="container-sm">
 			<h1>Task tracker</h1>
 			<form action="/tasks" method="POST" enctype="multipart/form-data">
-				<div class="row">
-					<div class="col">
-						<input class="form-control" name="description">
-					</div>
-					<div class="col">
-						<button type="submit" class="btn btn-primary">Add task</button>
-					</div>
+				<div class="mb-3">
+					<label for="description" class="form-label">Description</label>
+					<input class="form-control" name="description" id="description">
 				</div>
+				<div class="mb-3">
+					<label for="user-id" class="form-label">Popug</label>
+					<select class="form-select" name="user_id" id="user-id">
+						{{ range .Users }}
+							<option value="{{ .Id }}">{{ .Name }}</option>
+						{{ end }}
+					</select>
+				</div>
+				<button type="submit" class="btn btn-primary">Add task</button>
 			</form>
 			<h3>Task list:</h3>
 			<table class="table table-hover table-sm align-middle">
@@ -38,6 +43,7 @@
 					  <th scope="col">#</th>
 					  <th scope="col">Status</th>
 					  <th scope="col">Description</th>
+					  <th scope="col">User</th>
 					  <th scope="col">Actions</th>
 					</tr>
 				</thead>
@@ -47,6 +53,7 @@
 								<th scope="row">{{ .Id }}</th>
 								<td> {{if .Is_ready}} Done {{ else }} ToDo {{end}}</td>
 								<td>{{ .Description }}</div>
+								<td>{{ .User.Name }}</div>
 								<td>
 									<button type="submit" class="btn btn-outline-success" onclick="updateTask({{ .Id }})">Done</button>
 									<button type="submit" class="btn btn-outline-danger" onclick="deleteTask({{ .Id }})">Delete</button>

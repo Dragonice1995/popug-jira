@@ -1,35 +1,37 @@
 package repository
 
 import (
-	"database/sql"
 	"log"
-
-	"github.com/go-sql-driver/mysql"
 )
-
-var db *sql.DB
 
 type Task struct {
 	Id          int
 	Description string
 	Is_ready    bool
+	User        User
 }
 
 func GetTasks() []Task {
 	var tasks []Task
-	rows, errQuery := db.Query("SELECT id, description, is_ready FROM jira.tasks ORDER BY is_ready ASC, id DESC")
+	rows, errQuery := db.Query(`
+		SELECT t.id, t.description, t.is_ready, u.id, u.name, u.role
+		FROM jira.tasks t
+			LEFT JOIN jira.user_tasks ut ON ut.task_id = t.id
+			LEFT JOIN jira.users u ON ut.user_id = u.id
+		ORDER BY t.is_ready ASC, t.id DESC
+	`)
 	if errQuery != nil {
 		return tasks
 	}
 	for rows.Next() {
 		var task Task
-		rows.Scan(&task.Id, &task.Description, &task.Is_ready)
+		rows.Scan(&task.Id, &task.Description, &task.Is_ready, &task.User.Id, &task.User.Name, &task.User.Role)
 		tasks = append(tasks, task)
 	}
 	return tasks
 }
 
-func AddTask(description string) {
+func AddTask(description string, user_id int) {
 	result, err := db.Exec("INSERT INTO jira.tasks(description, is_ready) VALUES (?, ?)", description, false)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -39,7 +41,10 @@ func AddTask(description string) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	// log.Println(id)
+	_, err = db.Exec("INSERT INTO jira.user_tasks(task_id, user_id) VALUES (?, ?)", id, user_id)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 }
 
 func DeleteTask(id int) {
@@ -55,25 +60,5 @@ func UpdateTask(id int) {
 	_ = result
 	if err != nil {
 		log.Fatal(err.Error())
-	}
-}
-
-func Connect() {
-	cfg := mysql.Config{
-		User:                 "root",
-		Passwd:               "root",
-		Net:                  "tcp",
-		Addr:                 "go-mysql:3306",
-		DBName:               "jira",
-		AllowNativePasswords: true,
-	}
-	var err error
-	db, err = sql.Open("mysql", cfg.FormatDSN())
-	if err != nil {
-		log.Fatal("error open", err.Error())
-	}
-	pingErr := db.Ping()
-	if pingErr != nil {
-		log.Fatal(pingErr)
 	}
 }
